@@ -45,8 +45,9 @@ namespace TC_Parkering_Program
             {
 
                 Console.WriteLine("Vakt");
-                Reggnummer len = new Reggnummer();
-                string len1 = len.Reggnummer();
+                Regg Bilnummer = new Regg();
+                string bilnummer = Bilnummer.Reggnummer();
+                Console.WriteLine(bilnummer);
 
             }
 
