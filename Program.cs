@@ -1,13 +1,13 @@
-﻿namespace TC_Parkering_Program
+﻿using System;
+using System.Security.Cryptography.X509Certificates;
+
+namespace TC_Parkering_Program
 {
     internal class Program
     {
         static void Main(string[] args)
         {
-            //Mesgun
-            //Mesgun2
-            //Eric
-            //Yusuf
+
             string användarval;
             Console.WriteLine("Välj din roll");
             Console.WriteLine("1: Kund");
@@ -32,6 +32,9 @@
                     Console.WriteLine("Ogiltigt");
                     break;
             }
+
+
+
             static void Kund()
             {
                 Console.WriteLine("Kund");
@@ -40,14 +43,57 @@
 
             static void Vakt()
             {
+
                 Console.WriteLine("Vakt");
+                Reggnummer len = new Reggnummer();
+                string len1 = len.Reggnummer();
+
             }
 
-            //test
+
             static void Ägare()
             {
                 Console.WriteLine("Ägare");
             }
+
+
+        }
+
+        public class ParkeringsPlater
+        {
+            public string[] ParkeringPlats;
+
+
+        }
+
+        public class Regg
+        {
+            private Random random = new Random();
+             public string Reggnummer()
+             {
+
+                const string bokstäver = "ABCDEFGHIJKLMNOPQRSTUVWHYZ";
+                const string Siffror = "012345678";
+
+                char[] Reg = new char[6];
+                for (int i = 0; i < 3; i++)
+                {
+                    Reg[i] = bokstäver[random.Next(bokstäver.Length)];
+
+                }
+
+                for (int i = 3; i < 6; i++)
+                {
+                    Reg[i] = Siffror[random.Next(Siffror.Length)];
+                }
+
+                return new string(Reg);
+
+             }
+
+
+
+
         }
     }
 }
