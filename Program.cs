@@ -5,7 +5,6 @@ namespace TC_Parkering_Program
 {
     internal class Program
     {
-        //123 test
         static void Main(string[] args)
         {
 
@@ -49,8 +48,11 @@ namespace TC_Parkering_Program
 
 
                 parkeringsplats Parkering = new parkeringsplats();
-                string parkering = Parkering.parkeraBil();
-                Console.WriteLine(parkering);
+                for (int i = 0; i < 10; i++)
+                {
+                    string parkering = Parkering.parkeraBil();
+                    Console.WriteLine(parkering);
+                }
 
 
 
@@ -99,7 +101,7 @@ namespace TC_Parkering_Program
             }
 
 
-            public int parkeraBil()
+            public string parkeraBil()
             {
                 string regnummer = Reggnummer();
                 for (int i = 0; i < fordon.Length; i++)
@@ -108,10 +110,17 @@ namespace TC_Parkering_Program
                     {
                         fordon[i] = regnummer;
                         Console.WriteLine($"{regnummer}");
-                        return i + 1;
+                        return $"{i + 1}";
+
+
 
                     }
+
+
+                    //Eric
                 }
+
+                return "Det finns inga lediga parkeringsplatser.";
 
             }
         }
