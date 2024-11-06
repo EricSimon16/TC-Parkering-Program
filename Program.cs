@@ -45,9 +45,13 @@ namespace TC_Parkering_Program
             {
 
                 Console.WriteLine("Vakt");
-                Regg Bilnummer = new Regg();
-                string bilnummer = Bilnummer.Reggnummer();
-                Console.WriteLine(bilnummer);
+
+
+                parkeringsplats Parkering = new parkeringsplats();
+                string parkering = Parkering.parkeraBil();
+                Console.WriteLine(parkering);
+
+
 
             }
 
@@ -60,18 +64,16 @@ namespace TC_Parkering_Program
 
         }
 
-        public class ParkeringsPlater
+
+        public class parkeringsplats
         {
-            public string[] ParkeringPlats;
 
 
-        }
+            public string[] fordon = new string[5];
 
-        public class Regg
-        {
             private Random random = new Random();
-             public string Reggnummer()
-             {
+            public string Reggnummer()
+            {
 
                 const string bokstäver = "ABCDEFGHIJKLMNOPQRSTUVWHYZ";
                 const string Siffror = "012345678";
@@ -90,11 +92,30 @@ namespace TC_Parkering_Program
 
                 return new string(Reg);
 
-             }
 
 
 
+            }
 
+
+            public int parkeraBil()
+            {
+                string regnummer = Reggnummer();
+                for (int i = 0; i < fordon.Length; i++)
+                {
+                    if (fordon[i] == null)
+                    {
+                        fordon[i] = regnummer;
+                        Console.WriteLine($"{regnummer}");
+                        return i + 1;
+
+                    }
+                }
+
+            }
         }
+
+
     }
+
 }
