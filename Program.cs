@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Security.Cryptography.X509Certificates;
 
 namespace TC_Parkering_Program
 {
@@ -33,69 +32,60 @@ namespace TC_Parkering_Program
                     break;
             }
 
-
-
             static void Kund()
             {
-                Console.WriteLine("Välkommen kund, Vänligen parkera på en ledig plats");
-                string bilnummer = Console.ReadLine();
-                
-                
+                Console.WriteLine("Välkommen kund, vänligen parkera på en ledig plats.");
+                string bilnummer = string.Empty;
+
+                //
+                while (string.IsNullOrWhiteSpace(bilnummer))
+                {
+                    bilnummer = Console.ReadLine();
+                }
+
                 parkeringsplats Parkering = new parkeringsplats();
                 string parkering = Parkering.parkeraBil(bilnummer);
-                
+
+                //
+                Console.WriteLine($"{parkering}");
 
 
-                
-                
                 for (int i = 0; i < 10; i++)
                 {
                     string parkering1 = Parkering.parkeraBil();
-                    Console.WriteLine(parkering);
+                    Console.WriteLine(parkering1);
                 }
-
-
-                
             }
-
 
             static void Vakt()
             {
-
                 Console.WriteLine("Vakt");
 
-
                 parkeringsplats Parkering = new parkeringsplats();
+
                 for (int i = 0; i < 10; i++)
                 {
                     string parkering = Parkering.parkeraBil();
                     Console.WriteLine(parkering);
                 }
-
-
-
             }
-
 
             static void Ägare()
             {
                 Console.WriteLine("Ägare");
             }
-
-
         }
-
 
         public class parkeringsplats
         {
 
-
-            public string[] fordon = new string[5];
+            public string[] fordon = new string[25]; //
 
             private Random random = new Random();
+
+
             public string Reggnummer()
             {
-
                 const string bokstäver = "ABCDEFGHIJKLMNOPQRSTUVWHYZ";
                 const string Siffror = "012345678";
 
@@ -103,7 +93,6 @@ namespace TC_Parkering_Program
                 for (int i = 0; i < 3; i++)
                 {
                     Reg[i] = bokstäver[random.Next(bokstäver.Length)];
-
                 }
 
                 for (int i = 3; i < 6; i++)
@@ -112,48 +101,27 @@ namespace TC_Parkering_Program
                 }
 
                 return new string(Reg);
-
-
-
-
             }
 
 
             public string parkeraBil(string bilnummer = null)
             {
-
                 if (string.IsNullOrEmpty(bilnummer))
                 {
                     bilnummer = Reggnummer();
                 }
-                string regnummer = Reggnummer();
 
-                
                 for (int i = 0; i < fordon.Length; i++)
                 {
                     if (fordon[i] == null)
                     {
-                        fordon[i] = regnummer;
-                        Console.WriteLine($"{regnummer}");
-                        return $"{i + 1}";
-
-
-
+                        fordon[i] = bilnummer;  //
+                        return $"{i + 1}: {bilnummer}";  //
                     }
-
-
-                    //Eric
                 }
-                
 
                 return "Det finns inga lediga parkeringsplatser.";
-
             }
-
-
         }
-
-
     }
-
 }
