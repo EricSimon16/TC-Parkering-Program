@@ -37,7 +37,25 @@ namespace TC_Parkering_Program
 
             static void Kund()
             {
-                Console.WriteLine("Kund");
+                Console.WriteLine("Välkommen kund, Vänligen parkera på en ledig plats");
+                string bilnummer = Console.ReadLine();
+                
+                
+                parkeringsplats Parkering = new parkeringsplats();
+                string parkering = Parkering.parkeraBil(bilnummer);
+                
+
+
+                
+                
+                for (int i = 0; i < 10; i++)
+                {
+                    string parkering1 = Parkering.parkeraBil();
+                    Console.WriteLine(parkering);
+                }
+
+
+                
             }
 
 
@@ -101,9 +119,16 @@ namespace TC_Parkering_Program
             }
 
 
-            public string parkeraBil()
+            public string parkeraBil(string bilnummer = null)
             {
+
+                if (string.IsNullOrEmpty(bilnummer))
+                {
+                    bilnummer = Reggnummer();
+                }
                 string regnummer = Reggnummer();
+
+                
                 for (int i = 0; i < fordon.Length; i++)
                 {
                     if (fordon[i] == null)
@@ -119,10 +144,13 @@ namespace TC_Parkering_Program
 
                     //Eric
                 }
+                
 
                 return "Det finns inga lediga parkeringsplatser.";
 
             }
+
+
         }
 
 
