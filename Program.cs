@@ -182,5 +182,26 @@ namespace TC_Parkering_Program
                 }
             }
         }
+
+        public class vehicle
+        {
+            public string Name { get; set; } = "John";
+            public int numberOfWheels { get; set; }
+            
+
+        }
+        public class car : vehicle
+        {
+            public string size { get; set; }
+
+        }
+        public class bus : vehicle
+        {
+            public int seats { get; set; }
+        }
+        public class motorcycle : vehicle
+        {
+            public int size { get; set; }
+        }
     }
 }
