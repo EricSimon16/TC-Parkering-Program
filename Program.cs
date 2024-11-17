@@ -21,7 +21,7 @@ namespace TC_Parkering_Program
             switch (användarval)
             {
                 case "1":
-                    Kund(Parkering);
+                    KundUI(Parkering); // ÄNDRING: Anropar nya KundUI istället för Kund
                     break;
                 case "2":
                     Vakt(Parkering);
@@ -38,22 +38,50 @@ namespace TC_Parkering_Program
             Console.WriteLine("Alla parkeringsplatser är nu tomma. Programmet avslutas.");
         }
 
-        static void Kund(parkeringsplats Parkering)
+        static void KundUI(parkeringsplats Parkering)
         {
-            Console.WriteLine("Välkommen kund, vänligen parkera på en ledig plats.");
-            string bilnummer = string.Empty;
+            Console.WriteLine("Välkommen kund!");
+            Console.WriteLine("Skriv in ditt registreringsnummer:");
+            string regnummer = Console.ReadLine();
 
-            while (string.IsNullOrWhiteSpace(bilnummer))
+            Console.WriteLine("Skriv in färgen på din bil:");
+            string färg = Console.ReadLine();
+
+            Console.WriteLine("Välj fordonstyp:");
+            Console.WriteLine("1: Bil");
+            Console.WriteLine("2: Buss (Tar två platser)");
+            Console.WriteLine("3: Motorcykel (Kan dela plats)");
+            string fordonstypVal = Console.ReadLine();
+
+            string fordonstyp = fordonstypVal switch
             {
-                bilnummer = Console.ReadLine();
+                "1" => "bil",
+                "2" => "buss",
+                "3" => "motorcykel",
+                _ => "bil" // Om användaren inte väljer ett giltigt alternativ
+            };
+
+            Console.WriteLine("Ange hur länge du vill parkera (i sekunder):");
+            int parkeringstid;
+            while (!int.TryParse(Console.ReadLine(), out parkeringstid) || parkeringstid <= 0)
+            {
+                Console.WriteLine("Vänligen ange ett giltigt antal sekunder.");
             }
 
-            string parkering = Parkering.ParkeraBil(bilnummer);
-            Console.WriteLine($"Din bil ({bilnummer}) har parkerat på plats {parkering}.");
+            // Parkera fordonet
+            string plats = Parkering.ParkeraBil(regnummer, färg, fordonstyp, parkeringstid); // ÄNDRING: Anpassad metodsignatur
+            Console.WriteLine($"Fordonet med registreringsnummer {regnummer} (typ: {fordonstyp}, färg: {färg}) har parkerat på: {plats}");
 
-            for (int i = 0; i < 4; i++)
+            
+            Console.WriteLine("\nVill du checka ut?");
+            Console.WriteLine("1: Ja");
+            Console.WriteLine("2: Nej");
+            string kundVal = Console.ReadLine();
+
+            if (kundVal == "1")
             {
-                Parkering.ParkeraBil();
+                Console.WriteLine("Fordonet har checkat ut.");
+                Parkering.CheckaUtBil(regnummer); // ÄNDRING: Lägg till checka ut anrop
             }
         }
 
@@ -74,18 +102,40 @@ namespace TC_Parkering_Program
         public class parkeringsplats
         {
             private string[] fordon = new string[10];
+            private string[] färger = new string[10]; // ÄNDRING: Ny array för att lagra färger
+            private string[] typer = new string[10];  // ÄNDRING: Ny array för att lagra fordonstyp
             private int[] tider = new int[10];
-            private List<string> utgångnaBilar = new List<string>();  // För att spara vilka bilar som har gått ut i en list
+            private List<string> utgångnaBilar = new List<string>();
             private Random random = new Random();
             private object låsObjekt = new object();
             private int aktivaBilar = 0;
 
-            public string ParkeraBil(string bilnummer = null)
+            // ÄNDRING: Anpassad metod för att ta färg och fordonstyp
+            public string ParkeraBil(string regnummer, string färg, string typ, int tid)
             {
-                if (string.IsNullOrEmpty(bilnummer))
+                lock (låsObjekt)
                 {
-                    bilnummer = GenereraReggnummer();
+                    for (int i = 0; i < fordon.Length; i++)
+                    {
+                        if (fordon[i] == null)
+                        {
+                            fordon[i] = regnummer;
+                            färger[i] = färg; // ÄNDRING: Spara färgen
+                            typer[i] = typ;  // ÄNDRING: Spara fordonstypen
+                            tider[i] = tid;
+                            Interlocked.Increment(ref aktivaBilar);
+                            StartaNedräkning(i);
+                            UppdateraDisplay();
+                            return $"Plats {i + 1}";
+                        }
+                    }
                 }
+                return "Det finns inga lediga parkeringsplatser.";
+            }
+
+            public string ParkeraBil() 
+            {
+                string bilnummer = GenereraReggnummer();
 
                 lock (låsObjekt)
                 {
@@ -142,6 +192,8 @@ namespace TC_Parkering_Program
                 {
                     utgångnaBilar.Add(fordon[plats]);
                     fordon[plats] = null;
+                    färger[plats] = null; // ÄNDRING: Rensa färg
+                    typer[plats] = null;  // ÄNDRING: Rensa fordonstyp
                     tider[plats] = 0;
                     Interlocked.Decrement(ref aktivaBilar);
                 }
@@ -166,7 +218,7 @@ namespace TC_Parkering_Program
                     {
                         if (fordon[i] != null)
                         {
-                            Console.WriteLine($"Plats {i + 1}: {fordon[i]} - Tid kvar: {tider[i]} sekunder");
+                            Console.WriteLine($"Plats {i + 1}: {fordon[i]} (Färg: {färger[i]}, Typ: {typer[i]}) - Tid kvar: {tider[i]} sekunder"); // ÄNDRING: Lägg till färg och typ
                         }
                         else
                         {
@@ -181,27 +233,11 @@ namespace TC_Parkering_Program
                     }
                 }
             }
-        }
 
-        public class vehicle
-        {
-            public string Name { get; set; } = "John";
-            public int numberOfWheels { get; set; }
-            
-
-        }
-        public class car : vehicle
-        {
-            public string size { get; set; }
-
-        }
-        public class bus : vehicle
-        {
-            public int seats { get; set; }
-        }
-        public class motorcycle : vehicle
-        {
-            public int size { get; set; }
+            internal void CheckaUtBil(string regnummer)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }
