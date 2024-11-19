@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +27,7 @@ namespace TC_Parkering_Program
                     Vakt(Parkering);
                     break;
                 case "3":
-                    Ägare(Parkering);
+                    Ägare();
                     break;
                 default:
                     Console.WriteLine("Ogiltigt val.");
@@ -35,7 +35,7 @@ namespace TC_Parkering_Program
             }
 
             await Parkering.VäntaTillsParkeringTom();
-            Console.WriteLine("Alla parkeringsplatser är tomma.");
+            Console.WriteLine("Alla parkeringsplatser är nu tomma. Programmet avslutas.");
         }
 
         static void KundUI(parkeringsplats Parkering)
@@ -72,7 +72,7 @@ namespace TC_Parkering_Program
             string plats = Parkering.ParkeraBil(regnummer, färg, fordonstyp, parkeringstid); // ÄNDRING: Anpassad metodsignatur
             Console.WriteLine($"Fordonet med registreringsnummer {regnummer} (typ: {fordonstyp}, färg: {färg}) har parkerat på: {plats}");
 
-            
+
             Console.WriteLine("\nVill du checka ut?");
             Console.WriteLine("1: Ja");
             Console.WriteLine("2: Nej");
@@ -88,47 +88,15 @@ namespace TC_Parkering_Program
         static void Vakt(parkeringsplats Parkering)
         {
             Console.WriteLine("Vakt");
-            int antalBilar = new Random().Next(3, 11);
-            Dictionary<string, decimal> bilKostnader = Parkering.GenereraBilarFörVakt(antalBilar);
-
-            Console.WriteLine("Bilar genererade:");
-            foreach (var bil in bilKostnader)
-            {
-                Console.WriteLine($"Bil {bil.Key}: Kostnad {bil.Value} SEK");
-            }
-
-            Console.WriteLine("\nSkriv in ett regnummer för böter.");
-            while (true)
-            {
-                string input = Console.ReadLine();
-
-                Console.Clear(); 
-
-                if (Parkering.GeBöter(input))
-                {
-                    Console.WriteLine($"Böter 500 SEK {input}.");
-                }
-                else
-                {
-                    Console.WriteLine("Ogiltigt regnummer");
-                }
-
-                Console.WriteLine("\nLista med bilar:");
-                Parkering.VisaListaMedBilar();
-                Console.WriteLine($"\nTotala: {Parkering.HämtaTotalaIntäkter()} SEK");
-            }
-
-            Console.WriteLine($"\nTotala: {Parkering.HämtaTotalaIntäkter()} SEK");
-        }
-
-        static void Ägare(parkeringsplats Parkering)
-        {
-            Console.WriteLine("Ägare");
             for (int i = 0; i < 10; i++)
             {
-                string parkering = Parkering.ParkeraBil();
-                Console.WriteLine($"Bil parkerades på {parkering}.");
+                Parkering.ParkeraBil();
             }
+        }
+
+        static void Ägare()
+        {
+            Console.WriteLine("Ägare");
         }
 
         public class parkeringsplats
@@ -141,8 +109,6 @@ namespace TC_Parkering_Program
             private Random random = new Random();
             private object låsObjekt = new object();
             private int aktivaBilar = 0;
-            private decimal dagsinkomst = 0m; 
-            private const decimal böter = 500m; 
 
             // ÄNDRING: Anpassad metod för att ta färg och fordonstyp
             public string ParkeraBil(string regnummer, string färg, string typ, int tid)
@@ -167,7 +133,7 @@ namespace TC_Parkering_Program
                 return "Det finns inga lediga parkeringsplatser.";
             }
 
-            public string ParkeraBil() 
+            public string ParkeraBil()
             {
                 string bilnummer = GenereraReggnummer();
 
@@ -192,7 +158,7 @@ namespace TC_Parkering_Program
             private string GenereraReggnummer()
             {
                 const string bokstäver = "ABCDEFGHIJKLMNOPQRSTUVWHYZ";
-                const string siffror = "0123456789";
+                const string siffror = "012345678";
                 char[] reg = new char[6];
                 for (int i = 0; i < 3; i++)
                 {
@@ -230,8 +196,6 @@ namespace TC_Parkering_Program
                     typer[plats] = null;  // ÄNDRING: Rensa fordonstyp
                     tider[plats] = 0;
                     Interlocked.Decrement(ref aktivaBilar);
-
-                    dagsinkomst += böter;
                 }
             }
 
@@ -262,7 +226,7 @@ namespace TC_Parkering_Program
                         }
                     }
 
-                    Console.WriteLine("\nParkeringstid har gått ut:");
+                    Console.WriteLine("\nBilar vars parkeringstid har gått ut:");
                     foreach (var bil in utgångnaBilar)
                     {
                         Console.WriteLine($"Bil: {bil}");
@@ -270,69 +234,12 @@ namespace TC_Parkering_Program
                 }
             }
 
-                    Console.WriteLine($"\nDagen inkomst: {dagsinkomst} SEK");
-                }
-            }
-
-            public Dictionary<string, decimal> GenereraBilarFörVakt(int antal)
+            internal void CheckaUtBil(string regnummer)
             {
-                Dictionary<string, decimal> genereradeBilar = new Dictionary<string, decimal>();
-
-                for (int i = 0; i < antal; i++)
-                {
-                    string bilnummer = GenereraReggnummer();
-                    int tid = random.Next(10, 61);
-                    decimal kostnad = tid * 1.5m;
-                    genereradeBilar[bilnummer] = kostnad;
-
-                    lock (låsObjekt)
-                    {
-                        fordon[i] = bilnummer;
-                        tider[i] = tid;
-                        dagsinkomst += kostnad;
-                    }
-                }
-
-                return genereradeBilar;
-            }
-
-            public bool GeBöter(string regnummer)
-            {
-                lock (låsObjekt)
-                {
-                    for (int i = 0; i < fordon.Length; i++)
-                    {
-                        if (fordon[i] == regnummer)
-                        {
-                            fordon[i] = null;
-                            tider[i] = 0;
-                            dagsinkomst += böter;
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            }
-
-            public decimal HämtaTotalaIntäkter()
-            {
-                return dagsinkomst;
-            }
-
-            public void VisaListaMedBilar()
-            {
-                lock (låsObjekt)
-                {
-                    Console.WriteLine("Bilar på parkeringen:");
-                    for (int i = 0; i < fordon.Length; i++)
-                    {
-                        if (fordon[i] != null)
-                        {
-                            Console.WriteLine($"Plats {i + 1}: {fordon[i]} - Tid kvar: {tider[i]} sekunder");
-                        }
-                    }
-                }
+                throw new NotImplementedException();
             }
         }
+    }
+}
     }
 }
