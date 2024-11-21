@@ -68,11 +68,11 @@ namespace TC_Parkering_Program
                 Console.WriteLine("Vänligen ange ett giltigt antal sekunder.");
             }
 
-            // Parkera fordonet
-            string plats = Parkering.ParkeraBil(regnummer, färg, fordonstyp, parkeringstid); // ÄNDRING: Anpassad metodsignatur
+            // Parkera fordonet (OBS! Ingen displayuppdatering här!)
+            string plats = Parkering.ParkeraBil(regnummer, färg, fordonstyp, parkeringstid);
             Console.WriteLine($"Fordonet med registreringsnummer {regnummer} (typ: {fordonstyp}, färg: {färg}) har parkerat på: {plats}");
 
-
+            // Lägger till ett alternativ för användaren att checka ut
             Console.WriteLine("\nVill du checka ut?");
             Console.WriteLine("1: Ja");
             Console.WriteLine("2: Nej");
@@ -81,9 +81,24 @@ namespace TC_Parkering_Program
             if (kundVal == "1")
             {
                 Console.WriteLine("Fordonet har checkat ut.");
-                Parkering.CheckaUtBil(regnummer); // ÄNDRING: Lägg till checka ut anrop
+                Parkering.CheckaUtBil(regnummer);
+
+                // Efter att ha checkat ut, stäng applikationen
+                Environment.Exit(0);
+            }
+            else if (kundVal == "2")
+            {
+                Console.WriteLine("Du har valt att stanna kvar.");
+            }
+            else
+            {
+                Console.WriteLine("Ogiltigt val.");
             }
         }
+
+
+
+
 
         static void Vakt(parkeringsplats Parkering)
         {
@@ -134,6 +149,26 @@ namespace TC_Parkering_Program
 
         public class parkeringsplats
         {
+
+            public string GetFordonPåPlats(int platsIndex)
+            {
+                // Kollar om indexet är ett giltigt index (om det är mellan 0 och 9, eftersom du har 10 platser)
+                if (platsIndex >= 0 && platsIndex < fordon.Length)
+                {
+                    return fordon[platsIndex];  // Returnera registreringsnumret för bilen på den platsen
+                }
+                return null;  // Om det inte finns något fordon på den platsen, returnera null
+            }
+
+            private bool ärTestmiljö;  // Ny flagga för att indikera om vi är i testmiljö
+
+            public parkeringsplats(bool ärTestmiljö = false)
+            {
+                this.ärTestmiljö = ärTestmiljö;
+            }
+
+
+
             private string[] fordon = new string[10];
             private string[] färger = new string[10]; // ÄNDRING: Ny array för att lagra färger
             private string[] typer = new string[10];  // ÄNDRING: Ny array för att lagra fordonstyp
@@ -150,23 +185,54 @@ namespace TC_Parkering_Program
             {
                 lock (låsObjekt)
                 {
-                    for (int i = 0; i < fordon.Length; i++)
+                    if (typ == "buss")
                     {
-                        if (fordon[i] == null)
+                        // Leta efter två lediga platser i rad
+                        for (int i = 0; i < fordon.Length - 1; i++) // -1 för att undvika indexfel
                         {
-                            fordon[i] = regnummer;
-                            färger[i] = färg; // ÄNDRING: Spara färgen
-                            typer[i] = typ;  // ÄNDRING: Spara fordonstypen
-                            tider[i] = tid;
-                            Interlocked.Increment(ref aktivaBilar);
-                            StartaNedräkning(i);
-                            UppdateraDisplay();
-                            return $"Plats {i + 1}";
+                            if (fordon[i] == null && fordon[i + 1] == null) // Kontrollera två platser i rad
+                            {
+                                // Markera båda platserna för bussen
+                                fordon[i] = regnummer;
+                                fordon[i + 1] = regnummer; // Samma registreringsnummer för båda
+                                färger[i] = färg;
+                                färger[i + 1] = färg;
+                                typer[i] = typ;
+                                typer[i + 1] = typ;
+                                tider[i] = tid;
+                                tider[i + 1] = tid; // Samma tid för båda platserna
+                                Interlocked.Increment(ref aktivaBilar);
+                                Interlocked.Increment(ref aktivaBilar); // Bussen tar två platser
+                                StartaNedräkning(i);
+                                StartaNedräkning(i + 1);
+                                UppdateraDisplay();
+                                return $"Plats {i + 1} och {i + 2}";
+                            }
                         }
+                        return "Det finns inga två sammanhängande lediga parkeringsplatser för en buss.";
+                    }
+                    else
+                    {
+                        // Ursprunglig logik för bil/motorcykel
+                        for (int i = 0; i < fordon.Length; i++)
+                        {
+                            if (fordon[i] == null)
+                            {
+                                fordon[i] = regnummer;
+                                färger[i] = färg;
+                                typer[i] = typ;
+                                tider[i] = tid;
+                                Interlocked.Increment(ref aktivaBilar);
+                                StartaNedräkning(i);
+                                UppdateraDisplay();
+                                return $"Plats {i + 1}";
+                            }
+                        }
+                        return "Det finns inga lediga parkeringsplatser.";
                     }
                 }
-                return "Det finns inga lediga parkeringsplatser.";
             }
+
 
             public string ParkeraBil(string bilnummer = null)
             {
@@ -248,9 +314,15 @@ namespace TC_Parkering_Program
 
             private void UppdateraDisplay()
             {
+                if (ärTestmiljö)
+                {
+                    // Hoppa över att uppdatera displayen i testmiljö
+                    return;
+                }
+
                 lock (låsObjekt)
                 {
-                    Console.Clear();
+                    Console.Clear();  // Detta orsakar felet i testmiljö
                     Console.WriteLine("Parkeringsstatus:");
 
                     for (int i = 0; i < fordon.Length; i++)
@@ -271,12 +343,14 @@ namespace TC_Parkering_Program
                         Console.WriteLine($"Bil: {bil}");
                     }
 
-
                     Console.WriteLine($"\nDagens intäkter: {dagsinkomst} SEK");
                 }
             }
+        
 
-            public Dictionary<string, decimal> GenereraBilarFörVakt(int antal)
+
+
+        public Dictionary<string, decimal> GenereraBilarFörVakt(int antal)
             {
                 Dictionary<string, decimal> genereradeBilar = new Dictionary<string, decimal>();
 
@@ -323,8 +397,34 @@ namespace TC_Parkering_Program
 
             internal void CheckaUtBil(string regnummer)
             {
-                throw new NotImplementedException();
+                lock (låsObjekt)
+                {
+                    for (int i = 0; i < fordon.Length; i++)
+                    {
+                        if (fordon[i] == regnummer)
+                        {
+                            // Ta bort bilen från parkeringsplatsen
+                            fordon[i] = null;
+                            färger[i] = null;  // Rensa färg
+                            typer[i] = null;   // Rensa fordonstyp
+                            tider[i] = 0;      // Rensa parkeringstid
+
+                            // Minska antalet aktiva bilar
+                            Interlocked.Decrement(ref aktivaBilar);
+
+                            // Uppdatera parkeringsstatusen
+                            UppdateraDisplay();
+
+                            Console.WriteLine($"Bilen med registreringsnummer {regnummer} har checkat ut.");
+                            return;  // Avsluta när bilen är borttagen
+                        }
+                    }
+
+                    // Om bilen inte hittades
+                    Console.WriteLine($"Bilen med registreringsnummer {regnummer} finns inte på parkeringen.");
+                }
             }
+
             public void VisaListaMedBilar()
             {
                 lock (låsObjekt)
